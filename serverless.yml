@@ -1,0 +1,122 @@
+service: jay-user-auth-app
+useDotenv: true
+provider:
+  name: aws
+  stage: dev2
+  runtime: nodejs18.x
+  region: ap-south-1
+  deploymentBucket:
+    name: ${env:S3_BUCKET}
+  tracing:
+    lambda: true
+  environment:
+    COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+    COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+    PG_URI: ${env:PG_URI}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - http://localhost:3000
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Amz-Date
+        - X-Api-Key
+        - X-Amz-Security-Token
+      allowCredentials: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - cognito-idp:*
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:Scan
+          Resource: arn:aws:dynamodb:ap-south-1:442727737780:table/UserProfiles
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+            - s3:GetObject
+            - s3:PutObject
+          Resource: arn:aws:s3:::${env:S3_BUCKET}
+  ecr:
+    images:
+      jay-gurnani-user-app:
+        path: ./
+        file: Dockerfile.lambda
+functions:
+  api:
+    image:
+      name: jay-gurnani-user-app
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+    environment:
+      PG_URI: ${env:PG_URI}
+# functions:
+#   signup:
+#     handler: handler.signup
+#     events:
+#       - http:
+#           path: signup
+#           method: post
+#           cors: true
+#   login:
+#     handler: handler.login
+#     timeout: 30
+#     events:
+#       - http:
+#           path: login
+#           method: post
+#           cors: true
+#   getProfile:
+#     handler: handler.getProfile
+#     timeout: 30
+#     events:
+#       - http:
+#           path: profile
+#           method: get
+#           cors: true
+#   uploadProfile:
+#     handler: handler.uploadProfile
+#     timeout: 30
+#     events:
+#       - http:
+#           path: profile
+#           method: post
+#           cors: true
+#   uploadImage:
+#     handler: handler.uploadImage
+#     events:
+#       - http:
+#           path: image
+#           method: post
+#           cors: true
+
+#   getImage:
+#     handler: handler.getImage
+#     events:
+#       - http:
+#           path: image
+#           method: get
+#           cors: true
+#   getProfileBySub:
+#     handler: handler.getProfileBySub
+#     events:
+#       - http:
+#           path: profile/{user_sub}
+#           method: get
+#           cors: true
+
+
+plugins:
+  - serverless-offline
