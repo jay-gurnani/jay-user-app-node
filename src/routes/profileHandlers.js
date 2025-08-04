@@ -37,7 +37,7 @@ export async function uploadImageHandler(req, res) {
     }
 
     const fileBuffer = req.file.buffer;
-    const fileName = req.file.originalname;
+    const fileName = 'profile.jpg';
 
     const result = await S3.uploadProfileImage(userId, fileName, fileBuffer);
     res.status(200).json({ url: result.Location });

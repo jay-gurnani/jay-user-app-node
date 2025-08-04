@@ -21,25 +21,25 @@ export async function uploadProfileImage(userId, fileName, fileBuffer) {
   return result;
 }
 
-export async function getProfileImageUrl(fileName) {
-  const key = fileName;
+export async function getProfileImageUrl(key) {
   try {
+    console.log(`Checking for image at key: ${key} in bucket: ${BUCKET_NAME}`);
     await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
-    console.log(`Image found for key: ${key}`);
+
     const signedUrl = s3.getSignedUrl('getObject', {
       Bucket: BUCKET_NAME,
       Key: key,
-      Expires: 3600, // 1 hour
+      Expires: 3600,
     });
 
+    console.log('Signed URL generated:', signedUrl);
     return signedUrl;
   } catch (err) {
-    if (err.code === 'NotFound' || err.statusCode === 404) {
-      return null;
-    }
-    throw err;
+    console.error('Error in getProfileImageUrl:', err);
+    return null;
   }
 }
+
 
 export default {
   uploadProfileImage,

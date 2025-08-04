@@ -46,6 +46,7 @@ provider:
             - s3:ListBucket
             - s3:GetObject
             - s3:PutObject
+            - s3:HeadObject
           Resource: arn:aws:s3:::${env:S3_BUCKET}
   ecr:
     images:
