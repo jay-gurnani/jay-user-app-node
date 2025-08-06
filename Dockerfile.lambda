@@ -1,23 +1,24 @@
-FROM node:18
+FROM public.ecr.aws/lambda/nodejs:18
 
-WORKDIR /app
+# Set working directory to /var/task (default Lambda working dir)
+WORKDIR /var/task
 
-# Copy backend package files and install deps
+# Copy backend package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# --- React frontend build ---
-# Copy frontend source code
-COPY frontend ./frontend
-WORKDIR /app/frontend
+# Copy entire project (including src/, handler.js, etc.)
+COPY . .
+
+# Build frontend
+WORKDIR /var/task/frontend
 RUN npm install && npm run build
 
-# Move the build folder to root (where app.js expects it)
-RUN mv build /app/build
+# Move frontend build to where app.js expects it
+RUN mv /var/task/frontend/build/* /var/task/build
 
-# --- Back to backend ---
-WORKDIR /app
-COPY . .  
-# includes src/, app.js, etc.
+# Back to root where app.js is
+WORKDIR /var/task
 
-CMD ["npm", "start"]
+# Set Lambda handler
+CMD ["handler.handler"]

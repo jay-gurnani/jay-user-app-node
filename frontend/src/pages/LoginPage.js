@@ -2,13 +2,13 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// const BASE_URL = "http://localhost:8000"; //Fast Api
-// const BASE_URL = "https://qg7fzpae5k.execute-api.ap-south-1.amazonaws.com/dev"; //Serverless
-// const BASE_URL = "https://zmt4k4ugpe.execute-api.ap-south-1.amazonaws.com/Prod"; //SAM
-// const BASE_URL = "https://xmrp6sr5c1.execute-api.ap-south-1.amazonaws.com"; //Manual
-// const BASE_URL = "https://mhlis6pxc3.execute-api.ap-south-1.amazonaws.com"; //ec2
-// const BASE_URL = "https://aq4lr16810.execute-api.ap-south-1.amazonaws.com/dev2"; //Nodejs
-const BASE_URL = "http://localhost:3000"; 
+const isLocalhost = window.location.hostname === 'localhost';
+
+// Use localhost API if running locally, else use the deployed API Gateway URL
+export const BASE_URL = isLocalhost
+  ? 'http://localhost:3000/api'
+  : 'https://de0vedacxf.execute-api.ap-south-1.amazonaws.com/api';
+
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,18 +20,14 @@ function LoginPage() {
     setError("");
 
     try {
-      const res = await axios.post(`${BASE_URL}/login`, {
+      await axios.post(`${BASE_URL}/login`, {
         username,
         password,
-      },{
+      }, {
         headers: {
-            "Content-Type": "application/json"
+          "Content-Type": "application/json"
         }
       });
-      const data = res.data?.body? JSON.parse(res.data.body): res.data;
-      const token = data.id_token? data.id_token: data.idToken;
-      // const token = res.data.id_token; // assuming response has { token: "JWT..." }
-      localStorage.setItem("token", token);
       navigate("/profile");
     } catch (err) {
       console.error(err);
@@ -67,11 +63,25 @@ function LoginPage() {
           Login
         </button>
       </form>
+
+      {/* Forgot Password Link */}
+      <p style={{ marginTop: 10 }}>
+        <button 
+          onClick={() => navigate("/forgot-password")} 
+          style={{ background: "none", border: "none", color: "blue", cursor: "pointer", padding: 0 }}
+        >
+          Forgot Password?
+        </button>
+      </p>
+
       {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
+
       <p>
         Don’t have an account?{" "}
-        <button onClick={() => navigate("/signup")}>Sign Up</button>
-        </p>
+        <button onClick={() => navigate("/signup")}>
+          Sign Up
+        </button>
+      </p>
     </div>
   );
 }

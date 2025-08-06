@@ -8,6 +8,19 @@ const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
 });
 
+
+export async function configureS3WithCognito(identityId, token) {
+  AWS.config.region = 'ap-south-1';
+  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'ap-south-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', // your identity pool ID
+    Logins: {
+      'cognito-idp.ap-south-1.amazonaws.com/ap-south-1_uQC4jFlhF': token // your user pool ID
+    },
+    IdentityId: identityId
+  });
+}
+
+
 export async function uploadProfileImage(userId, fileName, fileBuffer) {
   const key = `profile-images/${userId}/${fileName}`;
 
@@ -43,5 +56,6 @@ export async function getProfileImageUrl(key) {
 
 export default {
   uploadProfileImage,
-  getProfileImageUrl
+  getProfileImageUrl,
+  configureS3WithCognito
 };

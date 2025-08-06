@@ -1,28 +1,35 @@
 import express from 'express';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { fileURLToPath } from 'url';
-
 import authRoutes from './src/routes/auth.js';
 import profileRoutes from './src/routes/profile.js';
 import adminRoutes from './src/routes/admin.js';
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// API routes
+app.use('/api/', authRoutes);
+app.use('/api/',profileRoutes);
+app.use('/api/',adminRoutes);
+
 // Serve frontend build
 app.use(express.static(path.join(__dirname, 'build')));
-
-// API routes
-app.use(authRoutes);
-app.use(profileRoutes);
-app.use(adminRoutes);
 
 // Fallback to index.html for React Router
 app.get('*', (_, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Express Error:', err); // Log to CloudWatch
+  res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
 export default app;

@@ -7,8 +7,8 @@ const router = express.Router();
 
 const adminAuthMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization || req.headers.Authorization;
-    const user = await verifyToken(token);
+    // const token = req.headers.authorization || req.headers.Authorization;
+    const user = await verifyToken(req);
 
     if (user['cognito:groups']?.includes('admin')) {
       req.user = user;
@@ -21,7 +21,7 @@ const adminAuthMiddleware = async (req, res, next) => {
   }
 };
 
-router.get('/users', adminAuthMiddleware, async (req, res) => {
+router.get('/admin/users', adminAuthMiddleware, async (req, res) => {
   const result = await listUsersHandler();
   res.status(result.statusCode).json(JSON.parse(result.body));
 });

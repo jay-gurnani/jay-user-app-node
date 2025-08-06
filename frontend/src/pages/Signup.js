@@ -2,13 +2,13 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// const BASE_URL = "http://localhost:8000"; //Fast Api
-// const BASE_URL = "https://qg7fzpae5k.execute-api.ap-south-1.amazonaws.com/dev"; //Serverless
-// const BASE_URL = "https://zmt4k4ugpe.execute-api.ap-south-1.amazonaws.com/Prod"; //SAM
-// const BASE_URL = "https://xmrp6sr5c1.execute-api.ap-south-1.amazonaws.com"; //Manual
-// const BASE_URL = "https://mhlis6pxc3.execute-api.ap-south-1.amazonaws.com"; //ec2
-// const BASE_URL = "https://aq4lr16810.execute-api.ap-south-1.amazonaws.com/dev2"; //Nodejs
-const BASE_URL = "http://localhost:3000"; 
+const isLocalhost = window.location.hostname === 'localhost';
+
+// Use localhost API if running locally, else use the deployed API Gateway URL
+export const BASE_URL = isLocalhost
+  ? 'http://localhost:3000/api'
+  : 'https://de0vedacxf.execute-api.ap-south-1.amazonaws.com/api';
+
 const Signup = () => {
   const [form, setForm] = useState({
     email: "",
@@ -39,7 +39,26 @@ const navigate = useNavigate();
       alert("Signed up! Check email for confirmation code.");
       setShowConfirm(true);
     } catch (err) {
-      alert(err.response?.data?.error || "Signup failed");
+      const errorMsg = err.response?.data?.error || "Signup failed";
+
+      if (errorMsg.includes("User already exists")) {
+        // Show confirm box for existing but unconfirmed user
+        alert("User already exists. If not confirmed, please enter the confirmation code.");
+        setShowConfirm(true);
+
+        // Optionally: resend confirmation code here
+        try {
+          await axios.post(`${BASE_URL}/resend-code`, {
+            username: form.email,
+          });
+          alert("Confirmation code resent!");
+        } catch (resendErr) {
+          console.error("Resend failed:", resendErr.response?.data?.error || resendErr.message);
+        }
+
+      } else {
+        alert(errorMsg);
+      }
     }
   };
 

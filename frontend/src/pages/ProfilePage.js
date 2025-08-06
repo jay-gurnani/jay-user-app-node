@@ -3,13 +3,13 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate, useParams } from "react-router-dom";
 
-// const BASE_URL = "http://localhost:8000"; //Fast Api
-// const BASE_URL = "https://qg7fzpae5k.execute-api.ap-south-1.amazonaws.com/dev"; //Serverless
-// const BASE_URL = "https://zmt4k4ugpe.execute-api.ap-south-1.amazonaws.com/Prod"; //SAM
-// const BASE_URL = "https://xmrp6sr5c1.execute-api.ap-south-1.amazonaws.com"; //Manual
-// const BASE_URL = "https://mhlis6pxc3.execute-api.ap-south-1.amazonaws.com"; //ec2
-// const BASE_URL = "https://aq4lr16810.execute-api.ap-south-1.amazonaws.com/dev2"; //Nodejs
-const BASE_URL = "http://localhost:3000"; 
+const isLocalhost = window.location.hostname === 'localhost';
+
+// Use localhost API if running locally, else use the deployed API Gateway URL
+export const BASE_URL = isLocalhost
+  ? 'http://localhost:3000/api'
+  : 'https://de0vedacxf.execute-api.ap-south-1.amazonaws.com/api';
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
@@ -26,81 +26,66 @@ export default function ProfilePage() {
     dob: ""
   });
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const decoded = jwtDecode(token);
-  const loggedInSub = decoded.sub;
-  const isViewingOwnProfile = !sub || sub === loggedInSub;
+  const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(!sub);
   
 
-  useEffect(() => {
+  useEffect( () => {   
     const fetchData = async () => {
-      const url = isViewingOwnProfile
+      try {
+        const loggedInUser = await fetchLoggedInUser();
+        const loggedInSub = loggedInUser.sub;
+        const roles = loggedInUser.roles || [];
+
+        setIsAdmin(roles.includes("admin"));
+        const viewingOwnProfile = !sub || sub === loggedInSub;
+        setIsViewingOwnProfile(viewingOwnProfile);
+        const url = viewingOwnProfile
         ? `${BASE_URL}/profile`
         : `${BASE_URL}/profile/${sub}`;
-      const imageurl = isViewingOwnProfile
+        const imgurl = viewingOwnProfile
         ? `${BASE_URL}/get-image`
         : `${BASE_URL}/get-image/${sub}`;
-      
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/");
-          return null;
-        }
         // Fetch profile
         const profileRes = await axios.get(url, {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         });
         setProfile(profileRes.data);
         setForm(profileRes.data);
         setIsEditing(false); // View mode
 
         // Fetch image
-        const imageRes = await axios.get(imageurl, {
-          headers: { Authorization: `Bearer ${token}` }
+        const imageRes = await axios.get(imgurl, {
+          withCredentials: true
         });
         setImageUrl(imageRes.data.url);
-
-        // Decode token to check for admin role
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        const roles = payload["cognito:groups"] || [];
-        setIsAdmin(roles.includes("admin"));
 
       } catch (err) {
         if (err.response?.status === 404) {
         console.warn("Profile not found. Initializing new form.");
-        setIsEditing(true); // Start in edit mode for new users
-        setProfile({});
-        setForm({
-          name: "",
-          gender: "",
-          height: "",
-          bio: "",
-          dob: ""
-        });
+        if (isViewingOwnProfile) {
+          setIsEditing(true); // Start in edit mode for new users
+          setProfile({});
+          setForm({
+            name: "",
+            gender: "",
+            height: "",
+            bio: "",
+            dob: ""
+          });
+        } else {
+          setIsEditing(false); // View mode for other users
+          setProfile(null);
+        }
       } else if(err.response?.status === 401) {
-          localStorage.removeItem("token");
           window.location.href = "/";
         } else {
           console.error("Error fetching profile:", err);
         }
       }
-      // Always try to fetch the image
-      try {
-        const token = localStorage.getItem("token");
-        const imageRes = await axios.get(imageurl, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setImageUrl(imageRes.data.url);
-      } catch (imgErr) {
-        console.warn("Image not found or failed to fetch.");
-      }
     };
 
     fetchData();
-  }, [sub, loggedInSub, isViewingOwnProfile, navigate]);
+  }, [sub, navigate]);
 
   const handleEditToggle = () => setIsEditing(!isEditing);
 
@@ -111,9 +96,8 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("token");
       await axios.post(`${BASE_URL}/profile`, form, {
-        headers: { Authorization: `Bearer ${token}` }
+        withCredentials: true
       });
       setIsEditing(false);
     } catch (err) {
@@ -121,50 +105,50 @@ export default function ProfilePage() {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setSelectedFileInfo(`${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+ const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64 = reader.result;
-      const token = localStorage.getItem("token");
+  setSelectedFileInfo(`${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
 
-      try {
-        const res = await axios.post(`${BASE_URL}/upload-image`, {
-          "file-data": base64
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
+  const formData = new FormData();
+  formData.append("file", file); // backend expects 'file'
 
-        setImageUrl(res.data.url);
-      } catch (err) {
-        console.error("Image upload failed:", err);
-      }
-    };
+  try {
+    const res = await axios.post(`${BASE_URL}/upload-image`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      },
+      withCredentials: true
+    });
 
-    reader.readAsDataURL(file);
-  };
-  
+    setImageUrl(res.data.url);
+  } catch (err) {
+    console.error("Image upload failed:", err);
+  }
+};
+
+  const fetchLoggedInUser = async () => {
+    const response = await axios.get(`${BASE_URL}/me`, {
+      withCredentials: true,
+    });
+    return response.data;
+  }
   const handleListUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
       const res = await axios.get(`${BASE_URL}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
+        withCredentials: true
       });
-      const data = JSON.parse(res.data.body);
+      const body = res.data.body || res.data;
+      const data = typeof body === 'string' ? JSON.parse(body) : body;
       setAllUsers(data.users);
     } catch (err) {
       console.error("Failed to fetch users:", err);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    await axios.post(`${BASE_URL}/logout`, {}, { withCredentials: true });
     window.location.href = "/";
   };
 
