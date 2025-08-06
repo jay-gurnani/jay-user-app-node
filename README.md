@@ -63,10 +63,10 @@ Which should result in the following response:
 
 ### Local development
 
-The easiest way to develop and test your function is to use the `dev` command:
+The easiest way to develop and test your function is to use the docker env:
 
 ```
-serverless dev
+docker compose up --build
 ```
 
 This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
