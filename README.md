@@ -1,76 +1,168 @@
-<!--
-title: 'Serverless Framework Node Express API on AWS'
-description: 'This template demonstrates how to develop and deploy a simple Node Express API running on AWS Lambda using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-priority: 1
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+Here's your customized `README.md` file content based on the project you've been building:
 
-# Serverless Framework Node Express API on AWS
+---
 
-This template demonstrates how to develop and deploy a simple Node Express API service running on AWS Lambda using the Serverless Framework.
+```markdown
+# Serverless Node.js Express API on AWS (with Cognito Auth)
 
-This template configures a single function, `api`, which is responsible for handling all incoming requests using the `httpApi` event. To learn more about `httpApi` event configuration options, please refer to [httpApi event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/). As the event is configured in a way to accept all incoming requests, the Express.js framework is responsible for routing and handling requests internally. This implementation uses the `serverless-http` package to transform the incoming event request payloads to payloads compatible with Express.js. To learn more about `serverless-http`, please refer to the [serverless-http README](https://github.com/dougmoscrop/serverless-http).
+This project demonstrates how to build, deploy, and run a **Node.js Express API** on **AWS Lambda** using the **Serverless Framework**, integrated with **AWS Cognito** for authentication. The backend provides secure RESTful APIs for user signup, login, profile management, and admin functionalities.
 
-## Usage
+---
 
-### Deployment
+## ✅ Features
 
-Install dependencies with:
+- Express.js-based routing
+- AWS Lambda + API Gateway (HTTP API)
+- User authentication with AWS Cognito
+- Route-based Lambda handlers: `/auth`, `/profile`, `/admin`
+- Environment variable support via `.env`
+- Serverless deployment using `serverless.yml`
+- Local development with `serverless offline`
+- PostgreSQL and S3 integration
+
+---
+
+## 📁 Project Structure
 
 ```
+
+├── handler.js              # Entry point for Lambda
+├── routes/
+│   ├── auth.js             # /signup, /login, /confirm, /forgot-password, etc.
+│   ├── profile.js          # /profile (GET/UPDATE), /image
+│   └── admin.js            # Admin-protected routes
+├── utils/
+│   └── s3.js               # S3 helper functions
+├── serverless.yml          # Serverless config
+├── .env                    # Environment variables (not committed)
+├── package.json
+└── README.md
+
+````
+
+---
+
+## 🚀 Deploy to AWS
+
+### 1. Install dependencies
+
+```bash
 npm install
+````
+
+### 2. Set up environment variables
+
+Create a `.env` file and add:
+
+```dotenv
+USER_POOL_ID=your-cognito-user-pool-id
+CLIENT_ID=your-cognito-app-client-id
+REGION=your-aws-region
+S3_BUCKET_NAME=your-bucket-name
+DATABASE_URL=your-postgres-url
 ```
 
-and then deploy with:
+### 3. Deploy
 
-```
+```bash
 serverless deploy
 ```
 
-After running deploy, you should see output similar to:
+You’ll see a URL like:
 
 ```
-Deploying "aws-node-express-api" to stage "dev" (us-east-1)
-
-✔ Service deployed to stack aws-node-express-api-dev (96s)
-
-endpoint: ANY - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com
-functions:
-  api: aws-node-express-api-dev-api (2.3 kB)
+endpoint: ANY - https://xxxxxxxxxx.execute-api.<region>.amazonaws.com
 ```
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [`httpApi` event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api/).
+---
 
-### Invocation
+## 🧪 Local Development
 
-After successful deployment, you can call the created application via HTTP:
+Start the app locally using:
 
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
-```
-
-Which should result in the following response:
-
-```json
-{ "message": "Hello from root!" }
+```bash
+serverless offline
 ```
 
-### Local development
-
-The easiest way to develop and test your function is to use the docker env:
+Local API will be available at:
 
 ```
-docker compose up --build
+http://localhost:3000
 ```
 
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
+---
 
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
+## 🌐 API Endpoints
 
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+### 🔐 Auth (`/auth`)
+
+* `POST /signup`
+* `POST /confirm`
+* `POST /resend-code`
+* `POST /login`
+* `POST /forgot-password`
+* `POST /confirm-forgot-password`
+
+### 👤 Profile (`/profile`)
+
+* `GET /profile` — Fetch user profile
+* `POST /profile` — Create or update user profile
+* `GET /image` — Get user's uploaded image
+
+### 🛡️ Admin (`/admin`)
+
+* `GET /list-users` — List all users (admin only)
+
+---
+
+## 🔒 Cognito Auth Flow
+
+1. **Signup** – creates user in Cognito User Pool
+2. **Confirm** – verifies user via emailed code
+3. **Login** – authenticates and returns JWT
+4. **Forgot Password** – sends reset code
+5. **Confirm Forgot Password** – sets new password using code
+6. **All routes except /auth** validate JWT on each request
+
+---
+
+## 📦 Dependencies
+
+* `express`
+* `serverless-http`
+* `aws-sdk`
+* `amazon-cognito-identity-js`
+* `pg` (for PostgreSQL)
+* `dotenv`
+* `uuid`
+
+---
+
+## 🔐 Security Tips
+
+* Store secrets securely using `AWS Secrets Manager` or encrypted `.env` files
+* Validate Cognito JWTs using middleware
+* Use IAM roles to scope access to S3, DynamoDB/PostgreSQL
+* Restrict `/admin` routes by checking user group or custom claim
+
+---
+
+## 📚 References
+
+* [Serverless Framework Docs](https://www.serverless.com/framework/docs/)
+* [AWS Cognito Developer Guide](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html)
+* [serverless-http](https://github.com/dougmoscrop/serverless-http)
+
+---
+
+## 👨‍💻 Author
+
+Maintained by \[Your Name]
+GitHub: [https://github.com/yourusername](https://github.com/yourusername)
+
+```
+
+---
+
+Let me know if you want this saved as a file or enhanced with diagrams/API examples/etc.
+```

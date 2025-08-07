@@ -9,6 +9,7 @@ provider:
     name: ${env:S3_BUCKET}
   tracing:
     lambda: true
+    apiGateway: true
   environment:
     COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
     COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
@@ -30,33 +31,36 @@ provider:
         - X-Api-Key
         - X-Amz-Security-Token
       allowCredentials: true
-  iam:
-    role:
-      statements:
-        - Effect: Allow
-          Action:
-            - cognito-idp:*
-          Resource: '*'
-        - Effect: Allow
-          Action:
-            - dynamodb:GetItem
-            - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DescribeTable 
-            - dynamodb:Scan
-            - dynamodb:Query
-          Resource: 
-            - arn:aws:dynamodb:ap-south-1:442727737780:table/${env:TableName}
-            - arn:aws:dynamodb:ap-south-1:442727737780:table/${env:TableName}/index/*
-        - Effect: Allow
-          Action:
-            - s3:ListBucket
-            - s3:GetObject
-            - s3:PutObject
-            - s3:HeadObject
-          Resource: 
-            - arn:aws:s3:::${env:S3_BUCKET}
-            - arn:aws:s3:::${env:S3_BUCKET}/*
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - cognito-idp:*
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DescribeTable 
+        - dynamodb:Scan
+        - dynamodb:Query
+      Resource: 
+        - arn:aws:dynamodb:ap-south-1:442727737780:table/${env:TableName}
+        - arn:aws:dynamodb:ap-south-1:442727737780:table/${env:TableName}/index/*
+    - Effect: Allow
+      Action:
+        - s3:ListBucket
+        - s3:GetObject
+        - s3:PutObject
+        - s3:HeadObject
+      Resource: 
+        - arn:aws:s3:::${env:S3_BUCKET}
+        - arn:aws:s3:::${env:S3_BUCKET}/*
   ecr:
     images:
       jay-gurnani-user-app:

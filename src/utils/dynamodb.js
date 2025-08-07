@@ -1,6 +1,8 @@
-import AWS from 'aws-sdk';
+import AWS from './aws-client.js';
 import dotenv from "dotenv";
+
 dotenv.config();
+
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLE_NAME = process.env.TableName; // must exist in DynamoDB
 

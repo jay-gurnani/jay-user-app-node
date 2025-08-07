@@ -1,5 +1,6 @@
-import AWS from 'aws-sdk';
+import AWS from './aws-client.js';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const BUCKET_NAME = process.env.S3_BUCKET;
@@ -36,7 +37,6 @@ export async function uploadProfileImage(userId, fileName, fileBuffer) {
 
 export async function getProfileImageUrl(key) {
   try {
-    console.log(`Checking for image at key: ${key} in bucket: ${BUCKET_NAME}`);
     await s3.headObject({ Bucket: BUCKET_NAME, Key: key }).promise();
 
     const signedUrl = s3.getSignedUrl('getObject', {
@@ -44,8 +44,6 @@ export async function getProfileImageUrl(key) {
       Key: key,
       Expires: 3600,
     });
-
-    console.log('Signed URL generated:', signedUrl);
     return signedUrl;
   } catch (err) {
     console.error('Error in getProfileImageUrl:', err);

@@ -14,7 +14,6 @@ const client = new CognitoIdentityProviderClient({ region: process.env.AWS_REGIO
 
 export async function verifyToken(event) {
   const cookieHeader = event.headers?.cookie || event.headers?.Cookie;
-  console.log("Me event header:", event);
   if (!cookieHeader) {
     return createResponse(401, { error: "Not authenticated" });
   }
@@ -119,7 +118,6 @@ export async function loginHandler(event) {
         maxAge: 60 * 60 * 24 * 7,
       }),
     ];
-    console.log("Returning cookies:", cookies);
     return createResponse(200, { success: true }, {}, {
       "Set-Cookie": cookies,
     });
@@ -142,7 +140,6 @@ export async function logoutHandler(event) {
 
 export async function meHandler(event) {
   const cookieHeader = event.headers?.cookie || event.headers?.Cookie;
-  console.log("Me event header:", event);
   if (!cookieHeader) {
     return createResponse(401, { error: "Not authenticated" });
   }
@@ -171,9 +168,6 @@ export async function meHandler(event) {
 export async function confirmSignUpHandler(event) {
   try {
     const { username, code } = JSON.parse(event.body);
-    console.log("confirm Signup event:", event);
-    console.log("Username:", username);
-    console.log("Code:", code);
     const command = new ConfirmSignUpCommand({
       ClientId: process.env.COGNITO_CLIENT_ID,
       Username: username,
@@ -191,8 +185,6 @@ export async function confirmSignUpHandler(event) {
 export async function resendConfirmationCodeHandler(event) {
   try {
     const { username } = JSON.parse(event.body);
-    console.log("Resend confirmation code event:", event);
-    console.log("Username:", username);
     const command = new ResendConfirmationCodeCommand({
       ClientId: process.env.COGNITO_CLIENT_ID,
       Username: username,
@@ -226,11 +218,6 @@ export async function forgotPasswordHandler(event) {
 export async function confirmForgotPasswordHandler(event) {
   try {
     const { username, confirmationCode, newPassword } = JSON.parse(event.body);
-
-    console.log("Confirm forgot password event:", event.body);
-    console.log("Username:", username);
-    console.log("Code:", confirmationCode);
-    console.log("New Password:", newPassword);
     const command = new ConfirmForgotPasswordCommand({
       ClientId: process.env.COGNITO_CLIENT_ID,
       Username: username,

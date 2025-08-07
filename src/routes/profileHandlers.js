@@ -1,13 +1,12 @@
 import db from '../utils/dynamodb.js';
 import S3 from '../utils/s3.js';
 import { verifyToken } from './authHandlers.js';
+import AWSXRay from 'aws-xray-sdk-core'
 
 export async function uploadProfileHandler(req, res) {
   try {
-    const authHeader = req.headers.authorization || req.headers.Authorization;
     const user = await verifyToken(req);
     const userId = user.sub;
-    console.log('User from token:', user);
     const { name, gender, height, bio, dob } = req.body;
     
     await db.saveOrUpdateProfile({
@@ -53,7 +52,10 @@ export async function getImageHandler(req, res) {
     // const authHeader = req.headers.authorization || req.headers.Authorization;
     const user = await verifyToken(req);
     const userId = user.sub;
+    const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+    const traceId = segment?.trace_id || 'no-trace-id';
 
+    console.log(`[trace-id: ${traceId}] Profile image retrieval initiated for user: ${user}`);
     const fileKey = `profile-images/${userId}/profile.jpg`; // adjust filename logic if needed
 
     const url = await S3.getProfileImageUrl(fileKey);

@@ -1,5 +1,4 @@
 export function createResponse(statusCode, body = {}, headers = {}, multiValueHeaders = {}) {
-  console.log(`Creating response with statusCode: ${statusCode}, body: ${JSON.stringify(body)}`);
   return {
     statusCode,
     headers: {
