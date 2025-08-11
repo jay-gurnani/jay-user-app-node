@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import AWSXRay from 'aws-xray-sdk-core';
 const isLocalhost = window.location.hostname === 'localhost';
 
 // Use localhost API if running locally, else use the deployed API Gateway URL
@@ -18,8 +17,6 @@ const Signup = () => {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmationCode, setConfirmationCode] = useState("");
-  const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
-  const traceId = segment?.trace_id || 'no-trace-id';
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -53,7 +50,7 @@ const Signup = () => {
           });
           alert("Confirmation code resent!");
         } catch (resendErr) {
-          console.error(`[trace-id: ${traceId}]`,"Resend failed:", resendErr.response?.data?.error || resendErr.message);
+          console.error("Resend failed:", resendErr.response?.data?.error || resendErr.message);
         }
 
       } else {
