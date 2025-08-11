@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate, useParams } from "react-router-dom";
+import AWSXRay from 'aws-xray-sdk-core';
 
 const isLocalhost = window.location.hostname === 'localhost';
 
@@ -27,7 +28,8 @@ export default function ProfilePage() {
   });
   const navigate = useNavigate();
   const [isViewingOwnProfile, setIsViewingOwnProfile] = useState(!sub);
-  
+  const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+  const traceId = segment?.trace_id || 'no-trace-id';
 
   useEffect( () => {   
     const fetchData = async () => {
@@ -79,7 +81,7 @@ export default function ProfilePage() {
       } else if(err.response?.status === 401) {
           window.location.href = "/";
         } else {
-          console.error("Error fetching profile:", err);
+          console.error(`[trace-id: ${traceId}]`,"Error fetching profile:", err);
         }
       }
     };
@@ -101,7 +103,7 @@ export default function ProfilePage() {
       });
       setIsEditing(false);
     } catch (err) {
-      console.error("Failed to update profile:", err);
+      console.error(`[trace-id: ${traceId}]`,"Failed to update profile:", err);
     }
   };
 
@@ -124,7 +126,7 @@ export default function ProfilePage() {
 
     setImageUrl(res.data.url);
   } catch (err) {
-    console.error("Image upload failed:", err);
+    console.error(`[trace-id: ${traceId}]`,"Image upload failed:", err);
   }
 };
 
@@ -143,7 +145,7 @@ export default function ProfilePage() {
       const data = typeof body === 'string' ? JSON.parse(body) : body;
       setAllUsers(data.users);
     } catch (err) {
-      console.error("Failed to fetch users:", err);
+      console.error(`[trace-id: ${traceId}]`,"Failed to fetch users:", err);
     }
   };
 

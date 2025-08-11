@@ -3,6 +3,9 @@ import S3 from '../utils/s3.js';
 import { verifyToken } from './authHandlers.js';
 import AWSXRay from 'aws-xray-sdk-core'
 
+const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+const traceId = segment?.trace_id || 'no-trace-id';
+
 export async function uploadProfileHandler(req, res) {
   try {
     const user = await verifyToken(req);
@@ -20,7 +23,7 @@ export async function uploadProfileHandler(req, res) {
 
     res.status(200).json({ message: 'Profile saved successfully.' });
   } catch (error) {
-    console.error('uploadProfileHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'uploadProfileHandler error:', error);
     res.status(500).json({ error: 'Failed to save profile.' });
   }
 }
@@ -41,7 +44,7 @@ export async function uploadImageHandler(req, res) {
     const result = await S3.uploadProfileImage(userId, fileName, fileBuffer);
     res.status(200).json({ url: result.Location });
   } catch (error) {
-    console.error('uploadImageHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'uploadImageHandler error:', error);
     res.status(500).json({ error: 'Failed to upload image.' });
   }
 }
@@ -65,7 +68,7 @@ export async function getImageHandler(req, res) {
 
     res.status(200).json({ url });
   } catch (error) {
-    console.error('getImageHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'getImageHandler error:', error);
     res.status(500).json({ error: 'Failed to get image URL.' });
   }
 }
@@ -83,7 +86,7 @@ export async function getProfileHandler(req, res) {
     }
     res.status(200).json(profile);
   } catch (error) {
-    console.error('getProfileHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'getProfileHandler error:', error);
     res.status(500).json({ error: 'Failed to get profile.' });
   }
 }
@@ -97,7 +100,7 @@ export async function getProfileBySubHandler(req, res) {
     }
     res.status(200).json(profile);
   } catch (error) {
-    console.error('getProfileBySubHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'getProfileBySubHandler error:', error);
     res.status(500).json({ error: 'Failed to get profile by sub.' });
   }
 }
@@ -112,7 +115,7 @@ export async function getImageBySubHandler(req, res) {
     }
     res.status(200).json({ url });
   } catch (error) {
-    console.error('getImageBySubHandler error:', error);
+    console.error(`[trace-id: ${traceId}]`,'getImageBySubHandler error:', error);
     res.status(500).json({ error: 'Failed to get image by sub.' });
   }
 }

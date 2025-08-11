@@ -2,12 +2,16 @@ import { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "./LoginPage"; // assuming same file or update path
 import { useNavigate } from "react-router-dom";
+import AWSXRay from 'aws-xray-sdk-core';
 
 function ForgotPasswordPage() {
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+  const traceId = segment?.trace_id || 'no-trace-id';
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
@@ -23,7 +27,7 @@ function ForgotPasswordPage() {
         navigate("/reset-password", { state: { username } });
       }, 2000);
     } catch (err) {
-      console.error(err);
+      console.error(`[trace-id: ${traceId}]`,err);
       setError(err.response?.data?.error || "Failed to send reset code.");
     }
   };

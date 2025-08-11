@@ -40,9 +40,12 @@ app.get('*', (_, res) => {
 // Close the X-Ray segment
 app.use(AWSXRay.express.closeSegment());
 
+const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+const traceId = segment?.trace_id || 'no-trace-id';
+
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('Express Error:', err);
+  console.error(`[trace-id: ${traceId}]`,`[trace-id: ${traceId}]`,'Express Error:', err);
   res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 

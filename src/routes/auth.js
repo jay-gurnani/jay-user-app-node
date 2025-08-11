@@ -1,15 +1,16 @@
 import express from "express";
 import { signupHandler, loginHandler, logoutHandler, meHandler, confirmSignUpHandler, resendConfirmationCodeHandler, forgotPasswordHandler, confirmForgotPasswordHandler } from "./authHandlers.js";
-
+import AWSXRay from "aws-xray-sdk-core";
 const router = express.Router();
-
+const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+const traceId = segment?.trace_id || 'no-trace-id';
 router.post("/signup", async (req, res) => {
   try {
     const result = await signupHandler({ body: JSON.stringify(req.body) });
     const body = JSON.parse(result.body);
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Signup route error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Signup route error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -39,7 +40,7 @@ router.post("/login", async (req, res) => {
 
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Login route error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Login route error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -56,7 +57,7 @@ router.post("/logout", async (req, res) => {
 
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Logout route error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Logout route error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -70,7 +71,7 @@ router.get("/me", async (req, res) => {
     }
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Me route error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Me route error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -81,7 +82,7 @@ router.post("/confirm-code", async (req, res) => {
     const body = JSON.parse(result.body);
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Confirm code error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Confirm code error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -92,7 +93,7 @@ router.post("/resend-code", async (req, res) => {
     const body = JSON.parse(result.body);
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Resend code error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Resend code error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -103,7 +104,7 @@ router.post("/forgot-password", async (req, res) => {
     const body = JSON.parse(result.body);
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Forgot password error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Forgot password error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -114,7 +115,7 @@ router.post("/confirm-forgot-password", async (req, res) => {
     const body = JSON.parse(result.body);
     res.status(result.statusCode).json(body);
   } catch (err) {
-    console.error("Confirm forgot password error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Confirm forgot password error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

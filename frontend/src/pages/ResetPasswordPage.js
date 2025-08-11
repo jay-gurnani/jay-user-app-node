@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "./LoginPage";
 import { useNavigate } from "react-router-dom";
+import AWSXRay from 'aws-xray-sdk-core';
 
 function ResetPasswordForm() {
   const [email, setEmail] = useState("");
@@ -10,7 +11,8 @@ function ResetPasswordForm() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+  const traceId = segment?.trace_id || 'no-trace-id';
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -26,7 +28,7 @@ function ResetPasswordForm() {
       setMessage("Password reset successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      console.error(err);
+      console.error(`[trace-id: ${traceId}]`,err);
       setError(err.response?.data?.error || "Failed to reset password");
     }
   };

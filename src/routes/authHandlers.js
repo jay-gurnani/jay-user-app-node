@@ -5,12 +5,16 @@ import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem';
 import fetch from 'node-fetch';
 import cookie from 'cookie';
+import AWSXRay from 'aws-xray-sdk-core';
+
 
 dotenv.config();
 let pemsCache = null;
 let pem = null
 
 const client = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION });
+const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+const traceId = segment?.trace_id || 'no-trace-id';
 
 export async function verifyToken(event) {
   const cookieHeader = event.headers?.cookie || event.headers?.Cookie;
@@ -77,7 +81,7 @@ export async function signupHandler(event) {
 
     return createResponse(200, { message: "Signup successful", data: response });
   } catch (err) {
-    console.error('Signup error:', err);
+    console.error(`[trace-id: ${traceId}]`,'Signup error:', err);
     return createResponse(400, { error: err.message });
   }
 }
@@ -123,7 +127,7 @@ export async function loginHandler(event) {
     });
 
   } catch (err) {
-    console.error("Login error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Login error:", err);
     return createResponse(401, { error: err.message });
   }
 }
@@ -160,7 +164,7 @@ export async function meHandler(event) {
       roles: decoded["cognito:groups"] || [],
     });
   } catch (err) {
-    console.error("JWT decode failed:", err);
+    console.error(`[trace-id: ${traceId}]`,"JWT decode failed:", err);
     return createResponse(401, { error: "Invalid token" });
   }
 }
@@ -177,7 +181,7 @@ export async function confirmSignUpHandler(event) {
     await client.send(command);
     return createResponse(200, { message: "User confirmed successfully" });
   } catch (err) {
-    console.error("Confirm sign-up error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Confirm sign-up error:", err);
     return createResponse(400, { error: err.message });
   }
 }
@@ -193,7 +197,7 @@ export async function resendConfirmationCodeHandler(event) {
     await client.send(command);
     return createResponse(200, { message: "Confirmation code resent successfully" });
   } catch (err) {
-    console.error("Resend confirmation code error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Resend confirmation code error:", err);
     return createResponse(400, { error: err.message });
   }
 }
@@ -210,7 +214,7 @@ export async function forgotPasswordHandler(event) {
     await client.send(command);
     return createResponse(200, { message: "Password reset code sent to user" });
   } catch (err) {
-    console.error("Forgot password error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Forgot password error:", err);
     return createResponse(400, { error: err.message });
   }
 }
@@ -228,7 +232,7 @@ export async function confirmForgotPasswordHandler(event) {
     await client.send(command);
     return createResponse(200, { message: "Password has been reset successfully" });
   } catch (err) {
-    console.error("Confirm forgot password error:", err);
+    console.error(`[trace-id: ${traceId}]`,"Confirm forgot password error:", err);
     return createResponse(400, { error: err.message });
   }
 }

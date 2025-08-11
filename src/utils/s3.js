@@ -1,9 +1,12 @@
 import AWS from './aws-client.js';
 import dotenv from 'dotenv';
+import AWSXRay from 'aws-xray-sdk-core';
 
 dotenv.config();
 
 const BUCKET_NAME = process.env.S3_BUCKET;
+const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+const traceId = segment?.trace_id || 'no-trace-id';
 
 const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
@@ -46,7 +49,7 @@ export async function getProfileImageUrl(key) {
     });
     return signedUrl;
   } catch (err) {
-    console.error('Error in getProfileImageUrl:', err);
+    console.error(`[trace-id: ${traceId}]`,'Error in getProfileImageUrl:', err);
     return null;
   }
 }

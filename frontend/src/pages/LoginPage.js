@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import AWSXRay from 'aws-xray-sdk-core';
 
 const isLocalhost = window.location.hostname === 'localhost';
 
@@ -14,7 +15,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const segment = AWSXRay.getSegment(); // gets the current X-Ray segment
+  const traceId = segment?.trace_id || 'no-trace-id';
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -30,7 +32,7 @@ function LoginPage() {
       });
       navigate("/profile");
     } catch (err) {
-      console.error(err);
+      console.error(`[trace-id: ${traceId}]`,err);
       if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else {
