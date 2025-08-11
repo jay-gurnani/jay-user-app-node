@@ -15,8 +15,8 @@ WORKDIR /var/task/frontend
 RUN npm install --omit=dev && npm run build
 
 # Move frontend build to where app.js expects it
-RUN mv /var/task/frontend/build/* /var/task/build
-
+RUN mkdir -p /var/task/build && \
+    mv /var/task/frontend/build/* /var/task/build/
 # Back to root where app.js is
 WORKDIR /var/task
 
