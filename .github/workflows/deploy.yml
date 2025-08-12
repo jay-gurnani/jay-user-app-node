@@ -30,8 +30,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install Serverless
-        run: npm install -g serverless
+      - name: Install Serverless v3
+        run: npm install -g serverless@3
 
       - name: Deploy via Serverless (build image automatically)
         run: serverless deploy
