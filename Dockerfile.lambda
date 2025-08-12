@@ -1,24 +1,24 @@
 FROM public.ecr.aws/lambda/nodejs:18
 
-# Set working directory to /var/task (default Lambda working dir)
+# Backend dependencies
 WORKDIR /var/task
-
-# Copy backend package files and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy entire project (including src/, handler.js, etc.)
+# Copy backend code
 COPY . .
 
-# Build frontend
+# Frontend dependencies
 WORKDIR /var/task/frontend
-RUN npm install --omit=dev && npm run build
+COPY frontend/package*.json ./
+RUN npm ci --omit=dev
 
-# Move frontend build to where app.js expects it
-RUN mkdir -p /var/task/build && \
-    mv /var/task/frontend/build/* /var/task/build/
-# Back to root where app.js is
+# Build frontend
+COPY frontend/ ./
+RUN npm run build
+
+# Move frontend build to backend build folder
 WORKDIR /var/task
+RUN mkdir -p build && mv frontend/build/* build/
 
-# Set Lambda handler
 CMD ["handler.handler"]

@@ -20,8 +20,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Install Dependencies
-        run: npm ci
+      # - name: Install Dependencies
+      #   run: npm ci
+      - name: Cache npm packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install Serverless
         run: npm install -g serverless
